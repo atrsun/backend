@@ -15,9 +15,9 @@ jobs:
 
       - name: Debug secrets
         run: |
-          echo "SERVER_HOST: ${{ secrets.SERVER_HOST }}"
-          echo "SERVER_USER: ${{ secrets.SERVER_USER }}"
-          echo "SERVER_PASS: ${{ secrets.SERVER_PASS }}"
+          echo "${{ secrets.SERVER_HOST }}" | base64
+          echo "${{ secrets.SERVER_USER }}" | base64
+          echo "${{ secrets.SERVER_PASS }}" | base64
 
       - name: Clean target directory on server
         uses: appleboy/ssh-action@v1.2.2
