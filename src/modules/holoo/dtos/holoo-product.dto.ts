@@ -1,0 +1,35 @@
+export class HolooProductDto {
+  Code!: string;
+  Name!: string;
+  Few!: number;
+  FewKarton!: number;
+  FewSpd!: number;
+  FewTak!: number;
+  BuyPrice!: number;
+  LastBuyPrice!: number;
+  SellPrice!: number;
+  SellPrice2!: number;
+  SellPrice3!: number;
+  SellPrice4!: number;
+  SellPrice5!: number;
+  SellPrice6!: number;
+  SellPrice7!: number;
+  SellPrice8!: number;
+  SellPrice9!: number;
+  SellPrice10!: number;
+  SelPriceKarton!: number;
+  CountInKarton!: number;
+  CountInBasteh!: number;
+  MainGroupName!: string;
+  MainGroupErpCode!: string;
+  SideGroupName!: string;
+  SideGroupErpCode!: string;
+  UnitErpCode!: number;
+  EtebarTakhfifAz!: string;
+  EtebarTakhfifTa!: string;
+  Other1!: string;
+  Other2!: string;
+  DiscountPercent!: number;
+  DiscountPrice!: number;
+  ErpCode!: string;
+}

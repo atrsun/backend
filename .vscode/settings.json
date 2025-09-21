@@ -1,0 +1,19 @@
+{
+  "cSpell.words": [
+    "Abstractfilter",
+    "Injectable",
+    "microservices",
+    "nestjs",
+    "postgres"
+  ],
+  "editor.detectIndentation": false,
+  "rift.autostart": false,
+"i18n-ally.localesPaths": [
+    "src/i18n"
+],
+"workbench.colorCustomizations": {
+    "activityBar.background": "#302D20",
+    "titleBar.activeBackground": "#44402D",
+    "titleBar.activeForeground": "#FBFAF8"
+}
+}

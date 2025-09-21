@@ -1,0 +1,25 @@
+services:
+  holoo-backend:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    image: holoo-backend:latest
+    container_name: holoo-backend
+    restart: unless-stopped
+    ports:
+      - "3000"
+    networks:
+      - web
+    env_file:
+      - ../.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.holoo-backend.rule=Host(`holoo.evasence.ir`)"
+      - "traefik.http.routers.holoo-backend.service=holoo-backend"
+      - "traefik.http.routers.holoo-backend.entrypoints=websecure"
+      - "traefik.http.routers.holoo-backend.tls.certresolver=lets-encrypt"
+      - "traefik.http.services.holoo-backend.loadbalancer.server.port=3000"
+
+networks:
+  web:
+    external: true
