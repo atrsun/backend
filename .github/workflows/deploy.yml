@@ -61,8 +61,6 @@ jobs:
             export IMAGE_TAG=${VERSION}
             export MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }}
             export MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}
-            export JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}
-            export JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}
 
             CURRENT_IMAGE=$(docker service inspect backend_atrsun-backend --format '{{(index .Spec.TaskTemplate.ContainerSpec.Image)}}' 2>/dev/null || echo "")
             if [ "$CURRENT_IMAGE" = "$IMAGE" ]; then
