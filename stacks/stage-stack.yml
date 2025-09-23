@@ -1,0 +1,47 @@
+services:
+  atrsun-backend:
+    image: atrsun-crm-backend:${IMAGE_TAG}
+    environment:
+      NODE_ENV: production
+      THROTTLER_TTL: 60000
+      THROTTLER_LIMIT: 5
+      DB_HOST: mongo
+      DB_NAME: atrsun
+      DB_USERNAME: ${MONGODB_USERNAME}
+      DB_PASSWORD: ${MONGODB_PASSWORD}
+      DB_AUTH_SOURCE: admin
+      ENABLE_DOCUMENTATION: true
+      NATS_ENABLED: false
+      JWT_EXPIRATION_TIME: 60480000
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      PORT: 6447
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 30s
+    networks:
+      - databases_network
+      - reverse_proxy_network
+
+networks:
+  databases_network:
+    name: databases_network
+    external: true
+  reverse_proxy_network:
+    name: reverse_proxy_network
+    external: true

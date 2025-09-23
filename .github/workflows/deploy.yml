@@ -36,7 +36,7 @@ jobs:
           source: "./"
           target: "/.esmaili/src/backend"
 
-      - name: Build docker image on server
+      - name: Build & Deploy on server
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -44,7 +44,44 @@ jobs:
           password: ${{ secrets.SERVER_PASS }}
           port: 22
           script: |
+            set -e
             cd /.esmaili/src/backend
+
             VERSION=$(jq -r .version package.json)
-            echo "Building atrsun-crm-backend:${VERSION}"
-            docker build -t atrsun-crm-backend:${VERSION} .
+            IMAGE="atrsun-crm-backend:${VERSION}"
+            echo "Image tag: $IMAGE"
+
+            if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+              echo "Building $IMAGE"
+              docker build -t "$IMAGE" .
+            else
+              echo "Image $IMAGE already exists, skip build."
+            fi
+
+            export IMAGE_TAG=${VERSION}
+            export MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }}
+            export MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}
+            export JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}
+            export JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}
+
+            CURRENT_IMAGE=$(docker service inspect backend_atrsun-backend --format '{{(index .Spec.TaskTemplate.ContainerSpec.Image)}}' 2>/dev/null || echo "")
+            if [ "$CURRENT_IMAGE" = "$IMAGE" ]; then
+              echo "Service already running $IMAGE, skip update."
+              exit 0
+            fi
+
+            if docker service ls --format '{{.Name}}' | grep -q '^backend_atrsun-backend$'; then
+              echo "Scaling service to 2 replicas before update..."
+              docker service scale backend_atrsun-backend=2
+            fi
+
+            envsubst < /.esmaili/src/backend/stacks/stage-stack.yml | docker stack deploy --with-registry-auth -c - backend
+
+            if docker service ls --format '{{.Name}}' | grep -q '^backend_atrsun-backend$'; then
+              echo "Forcing service update..."
+              docker service update --force backend_atrsun-backend
+              echo "Waiting 30 seconds after update..."
+              sleep 30
+              echo "Scaling back to 1 replica..."
+              docker service scale backend_atrsun-backend=1
+            fi
