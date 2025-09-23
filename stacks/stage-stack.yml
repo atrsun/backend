@@ -7,6 +7,7 @@ services:
       THROTTLER_LIMIT: 5
       DB_HOST: mongo
       DB_NAME: atrsun
+      DB_PORT: 27017
       DB_USERNAME: ${MONGODB_USERNAME}
       DB_PASSWORD: ${MONGODB_PASSWORD}
       DB_AUTH_SOURCE: admin
