@@ -68,18 +68,14 @@ jobs:
               exit 0
             fi
 
-            if docker service ls --format '{{.Name}}' | grep -q '^backend_atrsun-backend$'; then
-              echo "Scaling service to 2 replicas before update..."
-              docker service scale backend_atrsun-backend=2
-            fi
-
             envsubst < /.esmaili/src/backend/stacks/stage-stack.yml | docker stack deploy --with-registry-auth -c - backend
 
             if docker service ls --format '{{.Name}}' | grep -q '^backend_atrsun-backend$'; then
+              docker service scale backend_atrsun-backend=2
               echo "Forcing service update..."
               docker service update --force backend_atrsun-backend
               echo "Waiting 30 seconds after update..."
-              sleep 30
+              sleep 60
               echo "Scaling back to 1 replica..."
               docker service scale backend_atrsun-backend=1
             fi
