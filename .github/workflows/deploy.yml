@@ -64,13 +64,6 @@ jobs:
 
             CURRENT_IMAGE=$(docker service inspect backend_atrsun-backend --format '{{(index .Spec.TaskTemplate.ContainerSpec.Image)}}' 2>/dev/null || echo "")
             if [ "$CURRENT_IMAGE" = "$IMAGE" ]; then
-              echo "Service already running $IMAGE, skip update."
-              exit 0
-            fi
-
-            envsubst < /.esmaili/src/backend/stacks/stage-stack.yml | docker stack deploy --with-registry-auth -c - backend
-
-            if docker service ls --format '{{.Name}}' | grep -q '^backend_atrsun-backend$'; then
               docker service scale backend_atrsun-backend=2
               echo "Forcing service update..."
               docker service update --force backend_atrsun-backend
@@ -78,4 +71,21 @@ jobs:
               sleep 60
               echo "Scaling back to 1 replica..."
               docker service scale backend_atrsun-backend=1
+              exit 0
             fi
+
+            docker service scale backend_atrsun-backend=2
+            sleep 30
+            envsubst < /.esmaili/src/backend/stacks/stage-stack.yml | docker stack deploy --with-registry-auth -c - backend
+            sleep 30
+            docker service scale backend_atrsun-backend=1
+
+            echo "Cleaning up dangling and unused Docker resources safely..."
+            sleep 60
+
+            docker image prune -af
+            docker container prune -f
+            docker volume prune -f
+            docker network prune -f
+
+            echo "Done cleaning up unused Docker resources."
