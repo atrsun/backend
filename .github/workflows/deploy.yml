@@ -13,12 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Debug secrets
-        run: |
-          echo "${{ secrets.SERVER_HOST }}" | base64
-          echo "${{ secrets.SERVER_USER }}" | base64
-          echo "${{ secrets.SERVER_PASS }}" | base64
-
       - name: Clean target directory on server
         uses: appleboy/ssh-action@v1.2.2
         with:
@@ -29,8 +23,8 @@ jobs:
           debug: true
           port: 22
           script: |
-            rm -rf /.esmaili/projects/backend
-            mkdir -p /.esmaili/projects/backend
+            rm -rf /.esmaili/src/backend
+            mkdir -p /.esmaili/src/backend
 
       - name: Copy code to server
         uses: appleboy/scp-action@v1.0.0
@@ -40,7 +34,7 @@ jobs:
           password: ${{ secrets.SERVER_PASS }}
           port: 22
           source: "./"
-          target: "/.esmaili/projects/backend"
+          target: "/.esmaili/src/backend"
 
       - name: Build docker image on server
         uses: appleboy/ssh-action@v1.2.2
@@ -50,7 +44,7 @@ jobs:
           password: ${{ secrets.SERVER_PASS }}
           port: 22
           script: |
-            cd /.esmaili/projects/backend
+            cd /.esmaili/src/backend
             VERSION=$(jq -r .version package.json)
-            echo "Building atrsun-crm:${VERSION}"
-            docker build -t atrsun-crm:${VERSION} .
+            echo "Building atrsun-crm-backend:${VERSION}"
+            docker build -t atrsun-crm-backend:${VERSION} .
