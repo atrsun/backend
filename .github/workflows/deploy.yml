@@ -37,105 +37,71 @@ jobs:
           target: "/.esmaili/src/backend"
 
       - name: Build & Deploy on server
-  uses: appleboy/ssh-action@v1.2.2
-  with:
-    host: ${{ secrets.SERVER_HOST }}
-    username: ${{ secrets.SERVER_USER }}
-    password: ${{ secrets.SERVER_PASS }}
-    port: 22
-    script: |
-      set -euo pipefail
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASS }}
+          port: 22
+          script: |
+            set -euo pipefail
 
-      cd /.esmaili/src/backend
+            cd /.esmaili/src/backend
 
-      VERSION=$(jq -r .version package.json)
-      IMAGE="atrsun-crm-backend:${VERSION}"
-      echo "Image tag: $IMAGE"
+            VERSION=$(jq -r .version package.json)
+            IMAGE="atrsun-crm-backend:${VERSION}"
+            echo "Image tag: $IMAGE"
 
-      if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
-        echo "Building $IMAGE"
-        docker build -t "$IMAGE" .
-      else
-        echo "Image $IMAGE already exists, skip build."
-      fi
+            if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+              echo "Building $IMAGE"
+              docker build -t "$IMAGE" .
+            else
+              echo "Image $IMAGE already exists, skip build."
+            fi
 
-      export IMAGE_TAG=${VERSION}
-      export MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }}
-      export MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}
+            export IMAGE_TAG=${VERSION}
+            export MONGODB_USERNAME=${{ secrets.MONGODB_USERNAME }}
+            export MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}
 
-      SERVICE_NAME="backend_atrsun-backend"
+            SERVICE_NAME="backend_atrsun-backend"
 
-      service_exists() {
-        # return 0 if service exists, non-zero otherwise
-        docker service inspect "$1" >/dev/null 2>&1
-      }
+            service_exists() {
+              docker service inspect "$1" >/dev/null 2>&1
+            }
 
-      safe_scale() {
-        local svc="$1"
-        local replicas="$2"
-        if service_exists "$svc"; then
-          echo "Attempting to scale $svc => $replicas"
-          # scale may fail; don't let the whole script die because of that
-          if ! docker service scale "${svc}=${replicas}" 2>&1; then
-            echo "Warning: scaling $svc to $replicas failed — continuing without aborting."
-          else
-            echo "Scaled $svc => $replicas"
-          fi
-        else
-          echo "Service $svc not found — skipping scale(${replicas})."
-        fi
-      }
+            safe_scale() {
+              local svc="$1"
+              local replicas="$2"
+              if service_exists "$svc"; then
+                echo "Attempting to scale $svc => $replicas"
+                docker service scale "${svc}=${replicas}" || echo "Scaling failed, skipping"
+              else
+                echo "Service $svc not found — skipping scale(${replicas})."
+              fi
+            }
 
-      # read current image if service exists
-      CURRENT_IMAGE=""
-      if service_exists "$SERVICE_NAME"; then
-        CURRENT_IMAGE=$(docker service inspect "$SERVICE_NAME" --format '{{(index .Spec.TaskTemplate.ContainerSpec.Image)}}' 2>/dev/null || true)
-      fi
+            CURRENT_IMAGE=""
+            if service_exists "$SERVICE_NAME"; then
+              CURRENT_IMAGE=$(docker service inspect "$SERVICE_NAME" --format '{{(index .Spec.TaskTemplate.ContainerSpec.Image)}}' 2>/dev/null || true)
+            fi
 
-      if [ -n "$CURRENT_IMAGE" ] && [ "$CURRENT_IMAGE" = "$IMAGE" ]; then
-        echo "Service $SERVICE_NAME already running image $IMAGE — performing rolling update path."
+            if [ -n "$CURRENT_IMAGE" ] && [ "$CURRENT_IMAGE" = "$IMAGE" ]; then
+              echo "Performing rolling update for $SERVICE_NAME..."
+              safe_scale "$SERVICE_NAME" 2
+              sleep 30
+              docker service update --force "$SERVICE_NAME" || echo "Update failed, fallback to deploy"
+              sleep 30
+              safe_scale "$SERVICE_NAME" 1
+            else
+              echo "Deploying stack..."
+              envsubst < /.esmaili/src/backend/stacks/stage-stack.yml | docker stack deploy --with-registry-auth -c - backend
+              sleep 30
+              safe_scale "$SERVICE_NAME" 1
+            fi
 
-        # try scale up (if possible), then force-update, then scale down
-        safe_scale "$SERVICE_NAME" 2
-        sleep 30
-
-        echo "Forcing service update..."
-        # update might fail in rare cases; allow it to fail without aborting the whole flow
-        if ! docker service update --force "$SERVICE_NAME"; then
-          echo "Warning: docker service update failed. Will proceed to deploy stack as fallback."
-          envsubst < /.esmaili/src/backend/stacks/stage-stack.yml | docker stack deploy --with-registry-auth -c - backend
-        fi
-
-        sleep 30
-        safe_scale "$SERVICE_NAME" 1
-
-      else
-        echo "Deploying/updating stack (service missing or image changed)."
-        envsubst < /.esmaili/src/backend/stacks/stage-stack.yml | docker stack deploy --with-registry-auth -c - backend
-
-        # wait for service to appear (timeout)
-        echo "Waiting for $SERVICE_NAME to appear..."
-        retries=30
-        until service_exists "$SERVICE_NAME" || [ "$retries" -le 0 ]; do
-          sleep 5
-          retries=$((retries-1))
-        done
-
-        if service_exists "$SERVICE_NAME"; then
-          echo "$SERVICE_NAME is present after deploy."
-          # try warm-up scaling (optional)
-          safe_scale "$SERVICE_NAME" 2
-          sleep 30
-          safe_scale "$SERVICE_NAME" 1
-        else
-          echo "Warning: $SERVICE_NAME did not appear after deploy — skipping scaling."
-        fi
-      fi
-
-      echo "Cleaning up dangling and unused Docker resources safely..."
-
-      docker image prune -af || echo "docker image prune had no effect or failed"
-      docker container prune -f || echo "docker container prune had no effect or failed"
-      docker volume prune -f || echo "docker volume prune had no effect or failed"
-      docker network prune -f || echo "docker network prune had no effect or failed"
-      echo "Done cleaning up unused Docker resources."
+            echo "Cleaning up unused Docker resources..."
+            docker image prune -af || true
+            docker container prune -f || true
+            docker volume prune -f || true
+            docker network prune -f || true
+            echo "Cleanup complete."
