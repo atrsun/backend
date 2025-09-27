@@ -16,7 +16,7 @@ services:
       JWT_EXPIRATION_TIME: 60480000
       JWT_PRIVATE_KEY: lxaxg+1H8iRiqFynQYZ7/g==
       JWT_PUBLIC_KEY: lxaxg+1H8iRiqFynQYZ7/g==
-      PORT: 6447
+      PORT: 3000
       REDIS_HOST: redis
       REDIS_PORT: 6379
     deploy:
