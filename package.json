@@ -1,6 +1,6 @@
 {
   "name": "awesome-nestjs-boilerplate",
-  "version": "11.0.1",
+  "version": "11.0.0",
   "description": "Awesome NestJS Boilerplate, Typescript, Postgres, TypeORM",
   "author": "Narek Hakobyan <narek.hakobyan.07@gmail.com>",
   "private": true,
