@@ -17,7 +17,6 @@ export class HolooProductsApis {
 
   async getProductList(paginationDto: PaginationDto): Promise<HolooProduct> {
     const { limit, page } = paginationDto;
-
     const data = await this.holooService.axios.get(`/Product/${page}/${limit}`);
 
     return data.data;
@@ -92,7 +91,7 @@ export class HolooProductsApis {
 
   async updateProduct(erp_code: string): Promise<HolooUpdateProduct> {
     const updateProductData = {
-      productinfo: { erpcode: erp_code, countinkarton: 50 }, // few can be change by update mode
+      productinfo: { erpcode: erp_code, countinkarton: 50 },
     };
 
     const data = await this.holooService.axios.put(

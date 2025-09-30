@@ -17,7 +17,7 @@ const providers = [
   imports: [
     AxiosModule.register({
       baseURL: 'http://185.186.50.228:8080/TncHoloo/api',
-      timeout: 15_000,
+      timeout: 60_000,
     }),
   ],
   providers: [...providers, HolooService],

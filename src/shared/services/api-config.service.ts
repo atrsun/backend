@@ -78,7 +78,7 @@ export class ApiConfigService {
   get mongooseConfigs() {
     // Fallback: build URI manually
     const host = this.get('DB_HOST');
-    const port = this.get('DB_PORT');
+    const port = this.get('DB_PORT'); 
     const dbName = this.get('DB_NAME');
     const username = this.configService.get<string>('DB_USERNAME') ?? null;
     const password = this.configService.get('DB_PASSWORD') ?? null;
