@@ -6,7 +6,7 @@ services:
       THROTTLER_TTL: 60000
       THROTTLER_LIMIT: 5
       HOLOO_USER_NAME: web
-      HOLOO_DB_NAME: Holoo1
+      HOLOO_DB_NAME: Holoo3
       HOLOO_PASSWORD: MQ==
       DB_HOST: mongo
       DB_NAME: atrsun
