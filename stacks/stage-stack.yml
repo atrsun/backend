@@ -41,6 +41,7 @@ services:
     networks:
       - databases_network
       - backend
+      - reverse_proxy_network
     ports:
       - "3000:3000"
 
@@ -50,3 +51,6 @@ networks:
     external: true
   backend:
     name: backend
+  reverse_proxy_network:
+    name: reverse_proxy_network
+    external: true
