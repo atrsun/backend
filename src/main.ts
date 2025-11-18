@@ -1,5 +1,5 @@
 import {
-  ClassSerializerInterceptor,
+//   ClassSerializerInterceptor,
   HttpStatus,
   UnprocessableEntityException,
   ValidationPipe,
@@ -12,7 +12,7 @@ import compression from 'compression';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { AppModule } from './app.module.ts';
-import { HttpExceptionFilter } from './filters/bad-request.filter.ts';
+// import { HttpExceptionFilter } from './filters/bad-request.filter.ts';
 import { setupSwagger } from './setup-swagger.ts';
 import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
@@ -26,19 +26,19 @@ export async function bootstrap(): Promise<NestExpressApplication> {
         origin: "*"
     } },
   );
-  app.enable('trust proxy'); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
+//   app.enable('trust proxy'); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
   app.use(helmet());
   app.use(cookieParser());
   // app.setGlobalPrefix('/api'); use api as global prefix if you don't have subdomain
   app.use(compression());
-  app.use(morgan('combined'));
-  app.enableVersioning();
+  app.use(morgan('full'));
+//   app.enableVersioning();
 
-  const reflector = app.get(Reflector);
+//   const reflector = app.get(Reflector);
 
-  app.useGlobalFilters(new HttpExceptionFilter(reflector));
+//   app.useGlobalFilters(new HttpExceptionFilter(reflector));
 
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
+//   app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
 
   app.useGlobalPipes(
     new ValidationPipe({
