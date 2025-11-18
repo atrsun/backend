@@ -31,10 +31,15 @@ export class AuthController {
     @Body() UserLoginDto: UserLoginDto,
     @Res() res: Response,
   ): Promise<LoginPayloadDto> {
-    console.log("start Login");
+    try {
+        console.log("start Login");
     const aa = await this.authService.login(UserLoginDto, res);
+    console.log("aa", aa);
     console.log("end login");
     return aa
+    } catch (error) {
+        console.log("error",error)
+    }
   }
 
   @Get('me')
