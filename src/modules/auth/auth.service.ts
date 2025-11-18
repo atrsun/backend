@@ -17,6 +17,7 @@ export class AuthService {
   ) {}
 
   setCookie(res: Response, name: string, value: string, maxAge: number) {
+    console.log(`[DEBUG] Setting cookie: ${name}, maxAge: ${maxAge}ms, secure: true, sameSite: 'none'`);
     res.cookie(name, value, {
       httpOnly: true,
       secure: true,
@@ -29,51 +30,75 @@ export class AuthService {
     userId: string;
     isVaset: boolean;
   }): Promise<TokenPayloadDto> {
+    console.log(`[DEBUG] Creating access token for user: ${data.userId}, isVaset: ${data.isVaset}`);
+    
+    const accessToken = await this.jwtService.signAsync({
+      uuid: data.userId,
+      type: TokenType.ACCESS_TOKEN,
+      isVaset: data.isVaset,
+    });
+
+    console.log(`[DEBUG] Token created successfully for user: ${data.userId}`);
     return new TokenPayloadDto({
       expiresIn: this.configService.authConfig.jwtExpirationTime,
-      accessToken: await this.jwtService.signAsync({
-        uuid: data.userId,
-        type: TokenType.ACCESS_TOKEN,
-        isVaset: data.isVaset,
-      }),
+      accessToken,
     });
   }
 
   async login(dto: UserLoginDto, res: Response): Promise<LoginPayloadDto> {
-    const { email, password } = dto;
+    console.log(`[LOG] >>> Starting login process for email: ${dto.email}`);
+    
+    try {
+      const { email, password } = dto;
+      console.log('[DEBUG] Step 1: Fetching user by email');
+      
+      let user = await this.userService.findOne({ Email: email });
+      console.log(`[DEBUG] User found in DB: ${user ? 'YES' : 'NO'}`);
 
-    // Check if user exists based on phone number.
-    let user = await this.userService.findOne({ Email: email });
+      if (!user) {
+        console.log(`[WARN] ❌ User not found with email: ${email}`);
+        throw new NotFoundException('User not found');
+      }
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+      console.log('[DEBUG] Step 2: Validating password');
+      const isValidPassword = await this.userService.validatePassword(user, password);
+      console.log(`[DEBUG] Password validation result: ${isValidPassword ? 'VALID' : 'INVALID'}`);
+
+      if (!isValidPassword) {
+        console.log(`[WARN] ❌ Invalid password for user: ${email}`);
+        throw new NotFoundException('User not found');
+      }
+
+      console.log('[DEBUG] Step 3: Generating access token');
+      const token = await this.createAccessToken({
+        userId: user._id as string,
+        isVaset: user.IsVaseteh || false,
+      });
+      console.log('[DEBUG] ✅ Access token generated successfully');
+
+      console.log('[DEBUG] Step 4: Setting auth cookie');
+      const cookieMaxAge = 1000 * 60 * 60 * 24 * 30; // 30 days
+      this.setCookie(res, TokenType.ACCESS_TOKEN, token.accessToken, cookieMaxAge);
+      
+      const outPut = { 
+        token, 
+        user: user.toDto(),
+        debug: {
+          cookieSet: true,
+          responseSentFromService: false
+        }
+      };
+      
+      console.log(`[DEBUG] Step 5: Preparing response data. User ID: ${user._id}`);
+      
+      console.log(`[LOG] ✅ Login process completed successfully for user: ${user._id}`);
+      return outPut;
+
+    } catch (error) {
+      console.log(`[ERROR] 🔥 Login process failed: ${error.message}`, error.stack);
+      throw error;
+    } finally {
+      console.log('[LOG] <<< Login process finished (success or failure)');
     }
-
-    const isValidPassword = await this.userService.validatePassword(
-      user,
-      password,
-    );
-
-    if (!isValidPassword) {
-      throw new NotFoundException('User not found');
-    }
-
-    const token = await this.createAccessToken({
-      userId: user._id as string,
-      isVaset: user.IsVaseteh || false,
-    });
-
-    this.setCookie(
-      res,
-      TokenType.ACCESS_TOKEN,
-      token.accessToken,
-      1000 * 60 * 60 * 24 * 30,
-    ); // one month
-
-    const outPut = { token, user: user.toDto() };
-
-    res.json(outPut);
-
-    return outPut;
   }
 }
