@@ -97,8 +97,6 @@ export class AuthService {
     } catch (error) {
       console.log(`[ERROR] 🔥 Login process failed: ${error.message}`, error.stack);
       throw error;
-    } finally {
-      console.log('[LOG] <<< Login process finished (success or failure)');
     }
   }
 }
