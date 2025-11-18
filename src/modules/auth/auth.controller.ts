@@ -31,7 +31,10 @@ export class AuthController {
     @Body() UserLoginDto: UserLoginDto,
     @Res() res: Response,
   ): Promise<LoginPayloadDto> {
-    return await this.authService.login(UserLoginDto, res);
+    console.log("start Login");
+    const aa = await this.authService.login(UserLoginDto, res);
+    console.log("end login");
+    return aa
   }
 
   @Get('me')
