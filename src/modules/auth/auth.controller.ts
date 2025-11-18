@@ -30,7 +30,7 @@ export class AuthController {
   async userRegister(
     @Body() UserLoginDto: UserLoginDto,
     @Res() res: Response,
-  ): Promise<LoginPayloadDto> {
+  ): Promise<LoginPayloadDto | {}> {
     try {
         console.log("start Login");
     const aa = await this.authService.login(UserLoginDto, res);
@@ -39,6 +39,7 @@ export class AuthController {
     return aa
     } catch (error) {
         console.log("error",error)
+        return {}
     }
   }
 
