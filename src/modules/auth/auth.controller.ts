@@ -5,9 +5,9 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Res,
+//   Res,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse } from '@nestjs/swagger';
 
 import { RoleType } from '../../constants/role-type.ts';
 import { AuthUser } from '../../decorators/auth-user.decorator.ts';
@@ -17,19 +17,19 @@ import { UserEntity } from '../user/user.entity.ts';
 import { AuthService } from './auth.service.ts';
 import { LoginPayloadDto } from './dto/login-payload.dto.ts';
 import { UserLoginDto } from './dto/user-login.dto.ts';
-import type { Response } from 'express';
+// import type { Response } from 'express';
 
 @Controller('auth')
-@ApiTags('auth')
+// @ApiTags('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: UserDto, description: 'Successfully Registered' })
+//   @HttpCode(HttpStatus.OK)
+//   @ApiOkResponse({ type: UserDto, description: 'Successfully Registered' })
   async userRegister(
     @Body() UserLoginDto: UserLoginDto,
-    @Res() res: Response,
+    // @Res() res: Response,
   ): Promise<LoginPayloadDto | {}> {
     try {
         console.log("start Login");

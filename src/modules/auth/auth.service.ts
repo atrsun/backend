@@ -6,7 +6,6 @@ import { JwtService } from '@nestjs/jwt';
 import { ApiConfigService } from '../../shared/services/api-config.service';
 import { TokenType } from '../../constants/token-type';
 import { UserService } from '../../modules/user/user.service';
-import type { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -15,16 +14,6 @@ export class AuthService {
     private configService: ApiConfigService,
     private userService: UserService,
   ) {}
-
-  setCookie(res: Response, name: string, value: string, maxAge: number) {
-    console.log(`[DEBUG] Setting cookie: ${name}, maxAge: ${maxAge}ms, secure: true, sameSite: 'none'`);
-    res.cookie(name, value, {
-      httpOnly: true,
-      secure: true,
-      maxAge,
-      sameSite: 'none',
-    });
-  }
 
   async createAccessToken(data: {
     userId: string;
@@ -45,7 +34,7 @@ export class AuthService {
     });
   }
 
-  async login(dto: UserLoginDto, res: Response): Promise<LoginPayloadDto> {
+  async login(dto: UserLoginDto): Promise<LoginPayloadDto> {
     console.log(`[LOG] >>> Starting login process for email: ${dto.email}`);
     
     try {
@@ -77,8 +66,8 @@ export class AuthService {
       console.log('[DEBUG] ✅ Access token generated successfully');
 
       console.log('[DEBUG] Step 4: Setting auth cookie');
-      const cookieMaxAge = 1000 * 60 * 60 * 24 * 30; // 30 days
-      this.setCookie(res, TokenType.ACCESS_TOKEN, token.accessToken, cookieMaxAge);
+    //   const cookieMaxAge = 1000 * 60 * 60 * 24 * 30; // 30 days
+    //   this.setCookie(res, TokenType.ACCESS_TOKEN, token.accessToken, cookieMaxAge);
       
       const outPut = { 
         token, 
