@@ -33,7 +33,7 @@ export class AuthController {
   ): Promise<LoginPayloadDto | {}> {
     try {
         console.log("start Login");
-    const aa = await this.authService.login(UserLoginDto, res);
+    const aa = await this.authService.login(UserLoginDto);
     console.log("aa", aa);
     console.log("end login");
     return aa
